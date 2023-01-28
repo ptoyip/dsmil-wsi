@@ -10,12 +10,15 @@ from skimage import io, img_as_ubyte
 
 np.random.seed(0)
 
-class Dataset():
+
+class Dataset:
     def __init__(self, csv_file, transform=None):
         self.files_list = pd.read_csv(csv_file)
         self.transform = transform
+
     def __len__(self):
         return len(self.files_list)
+
     def __getitem__(self, idx):
         temp_path = self.files_list.iloc[idx, 0]
         img = Image.open(temp_path)
@@ -24,14 +27,15 @@ class Dataset():
             sample = self.transform(img)
         return sample
 
+
 class ToPIL(object):
     def __call__(self, sample):
         img = sample
         img = transforms.functional.to_pil_image(img)
-        return img 
+        return img
+
 
 class DataSetWrapper(object):
-
     def __init__(self, batch_size, num_workers, valid_size, input_shape, s):
         self.batch_size = batch_size
         self.num_workers = num_workers
@@ -41,20 +45,30 @@ class DataSetWrapper(object):
 
     def get_data_loaders(self):
         data_augment = self._get_simclr_pipeline_transform()
-        train_dataset = Dataset(csv_file='all_patches.csv', transform=SimCLRDataTransform(data_augment))
-        train_loader, valid_loader = self.get_train_validation_data_loaders(train_dataset)
+        train_dataset = Dataset(
+            csv_file="all_patches.csv", transform=SimCLRDataTransform(data_augment)
+        )
+        train_loader, valid_loader = self.get_train_validation_data_loaders(
+            train_dataset
+        )
         return train_loader, valid_loader
 
     def _get_simclr_pipeline_transform(self):
         # get a set of data augmentation transformations as described in the SimCLR paper.
-        color_jitter = transforms.ColorJitter(0.8 * self.s, 0.8 * self.s, 0.8 * self.s, 0.2 * self.s)
-        data_transforms = transforms.Compose([ToPIL(),
-                                              transforms.RandomResizedCrop(size=self.input_shape[0]),
-                                              transforms.RandomHorizontalFlip(),
-                                              transforms.RandomApply([color_jitter], p=0.8),
-                                              transforms.RandomGrayscale(p=0.2),
-                                              GaussianBlur(kernel_size=int(0.06 * self.input_shape[0])),
-                                              transforms.ToTensor()])
+        color_jitter = transforms.ColorJitter(
+            0.8 * self.s, 0.8 * self.s, 0.8 * self.s, 0.2 * self.s
+        )
+        data_transforms = transforms.Compose(
+            [
+                ToPIL(),
+                transforms.RandomResizedCrop(size=self.input_shape[0]),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomApply([color_jitter], p=0.8),
+                transforms.RandomGrayscale(p=0.2),
+                GaussianBlur(kernel_size=int(0.06 * self.input_shape[0])),
+                transforms.ToTensor(),
+            ]
+        )
         return data_transforms
 
     def get_train_validation_data_loaders(self, train_dataset):
@@ -70,10 +84,21 @@ class DataSetWrapper(object):
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
 
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, sampler=train_sampler,
-                                  num_workers=self.num_workers, drop_last=True, shuffle=False)
-        valid_loader = DataLoader(train_dataset, batch_size=self.batch_size, sampler=valid_sampler,
-                                  num_workers=self.num_workers, drop_last=True)
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=self.batch_size,
+            sampler=train_sampler,
+            num_workers=self.num_workers,
+            drop_last=True,
+            shuffle=False,
+        )
+        valid_loader = DataLoader(
+            train_dataset,
+            batch_size=self.batch_size,
+            sampler=valid_sampler,
+            num_workers=self.num_workers,
+            drop_last=True,
+        )
         return train_loader, valid_loader
 
 

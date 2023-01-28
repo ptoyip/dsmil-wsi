@@ -4,11 +4,12 @@ import torchvision.models as models
 
 
 class ResNetSimCLR(nn.Module):
-
     def __init__(self, base_model, out_dim):
         super(ResNetSimCLR, self).__init__()
-        self.resnet_dict = {"resnet18": models.resnet18(pretrained=False, norm_layer=nn.InstanceNorm2d),
-                            "resnet50": models.resnet50(pretrained=False, norm_layer=nn.InstanceNorm2d)}
+        self.resnet_dict = {
+            "resnet18": models.resnet18(pretrained=False, norm_layer=nn.InstanceNorm2d),
+            "resnet50": models.resnet50(pretrained=False, norm_layer=nn.InstanceNorm2d),
+        }
 
         resnet = self._get_basemodel(base_model)
         num_ftrs = resnet.fc.in_features
@@ -25,7 +26,9 @@ class ResNetSimCLR(nn.Module):
             print("Feature extractor:", model_name)
             return model
         except:
-            raise ("Invalid model name. Check the config file and pass one of: resnet18 or resnet50")
+            raise (
+                "Invalid model name. Check the config file and pass one of: resnet18 or resnet50"
+            )
 
     def forward(self, x):
         h = self.features(x)
