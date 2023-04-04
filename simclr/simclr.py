@@ -67,9 +67,6 @@ class SimCLR(object):
         train_loader, valid_loader = self.dataset.get_data_loaders()
 
         model = ResNetSimCLR(**self.config["model"])  # .to(self.device)
-        if self.config["n_gpu"] > 1:
-            device_n = len(eval(self.config["gpu_ids"]))
-            model = torch.nn.DataParallel(model, device_ids=range(device_n))
         model = self._load_pre_trained_weights(model)
         model = model.to(self.device)
 
@@ -88,7 +85,9 @@ class SimCLR(object):
             model, optimizer = amp.initialize(
                 model, optimizer, opt_level="O2", keep_batchnorm_fp32=True
             )
-
+        if self.config["n_gpu"] > 1:
+            device_n = len(eval(self.config["gpu_ids"]))
+            model = torch.nn.DataParallel(model)
         model_checkpoints_folder = os.path.join(self.writer.log_dir, "checkpoints")
 
         # save config file
@@ -101,12 +100,10 @@ class SimCLR(object):
         for epoch_counter in range(self.config["epochs"]):
             print(f"epoch{epoch_counter}")
             for (xis, xjs) in train_loader:
-                print("xis, xjs", end=" ")
                 optimizer.zero_grad()
 
                 xis = xis.to(self.device)
                 xjs = xjs.to(self.device)
-
                 loss = self._step(model, xis, xjs, n_iter)
 
                 if n_iter % self.config["log_every_n_steps"] == 0:

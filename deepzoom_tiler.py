@@ -13,6 +13,7 @@ from skimage import io
 from skimage.color import rgb2hsv
 from skimage.util import img_as_ubyte
 from skimage import filters
+from pathlib import Path
 from PIL import Image, ImageFilter, ImageStat
 
 Image.MAX_IMAGE_PIXELS = None
@@ -64,6 +65,8 @@ class TileWorker(Process):
                     if not (w == self._tile_size and h == self._tile_size):
                         tile = tile.resize((self._tile_size, self._tile_size))
                     tile.save(outfile, quality=self._quality)
+                else:
+                    print('reject tile')
             except:
                 pass
             self._queue.task_done()
@@ -107,6 +110,7 @@ class DeepZoomImageTiler(object):
             if not os.path.exists(tiledir):
                 os.makedirs(tiledir)
             cols, rows = self._dz.level_tiles[level]
+            print(cols,rows)
             for row in range(rows):
                 for col in range(cols):
                     tilename = os.path.join(
@@ -295,64 +299,18 @@ def nested_patches(img_slide, out_base, level=(0,), ext="jpeg"):
 if __name__ == "__main__":
     Image.MAX_IMAGE_PIXELS = None
     parser = argparse.ArgumentParser(description="Patch extraction for WSI")
-    parser.add_argument(
-        "-d", "--dataset", type=str, default="TCGA-lung", help="Dataset name"
-    )
-    parser.add_argument(
-        "-e", "--overlap", type=int, default=0, help="Overlap of adjacent tiles [0]"
-    )
-    parser.add_argument(
-        "-f", "--format", type=str, default="jpeg", help="Image format for tiles [jpeg]"
-    )
-    parser.add_argument(
-        "-v",
-        "--slide_format",
-        type=str,
-        default="svs",
-        help="Image format for tiles [svs]",
-    )
-    parser.add_argument(
-        "-j",
-        "--workers",
-        type=int,
-        default=4,
-        help="Number of worker processes to start [4]",
-    )
-    parser.add_argument(
-        "-q", "--quality", type=int, default=70, help="JPEG compression quality [70]"
-    )
-    parser.add_argument(
-        "-s", "--tile_size", type=int, default=224, help="Tile size [224]"
-    )
-    parser.add_argument(
-        "-b",
-        "--base_mag",
-        type=float,
-        default=20,
-        help="Maximum magnification for patch extraction [20]",
-    )
-    parser.add_argument(
-        "-m",
-        "--magnifications",
-        type=int,
-        nargs="+",
-        default=(0,),
-        help="Levels for patch extraction [0]",
-    )
-    parser.add_argument(
-        "-o",
-        "--objective",
-        type=float,
-        default=20,
-        help="The default objective power if metadata does not present [20]",
-    )
-    parser.add_argument(
-        "-t",
-        "--background_t",
-        type=int,
-        default=15,
-        help="Threshold for filtering background [15]",
-    )
+    parser.add_argument("-d", "--dataset", type=str, default="TCGA-lung", help="Dataset name")
+    parser.add_argument('-p',"--dataset_path",type=str,help ="dataset_exact_path")
+    parser.add_argument("-e", "--overlap", type=int, default=0, help="Overlap of adjacent tiles [0]")
+    parser.add_argument("-f", "--format", type=str, default="jpeg", help="Image format for tiles [jpeg]")
+    parser.add_argument("-v","--slide_format",type=str,default="svs",help="Image format for tiles [svs]",)
+    parser.add_argument("-j","--workers",type=int,default=4,help="Number of worker processes to start [4]",)
+    parser.add_argument("-q", "--quality", type=int, default=70, help="JPEG compression quality [70]")
+    parser.add_argument("-s", "--tile_size", type=int, default=256, help="Tile size [256]")
+    parser.add_argument("-b","--base_mag", type=float,default=20,help="Maximum magnification for patch extraction [20]",)
+    parser.add_argument("-m","--magnifications",type=int,nargs="+",default=(0,),help="Levels for patch extraction [0]",)
+    parser.add_argument("-o","--objective",type=float,default=20,help="The default objective power if metadata does not present [20]",)
+    parser.add_argument("-t","--background_t",type=int,default=15,help="Threshold for filtering background [15]",)
     args = parser.parse_args()
     levels = tuple(args.magnifications)
     assert len(levels) <= 2, "Only 1 or 2 magnifications are supported!"
@@ -361,10 +319,16 @@ if __name__ == "__main__":
         out_base = os.path.join("WSI", args.dataset, "pyramid")
     else:
         out_base = os.path.join("WSI", args.dataset, "single")
-    all_slides = glob.glob(
-        os.path.join(path_base, "*/*." + args.slide_format)
-    ) + glob.glob(os.path.join(path_base, "*/*/*." + args.slide_format))
-    print(os.path.join(path_base, "*." + args.slide_format))
+    if args.dataset_path is '':
+        all_slides = glob.glob(
+            os.path.join(path_base, "*/*." + args.slide_format)
+        ) + glob.glob(os.path.join(path_base, "*/*/*." + args.slide_format))
+        print(os.path.join(path_base, "*." + args.slide_format))
+    else:
+        print('Load WSI by dataset full path')
+        path_base = Path(f'{args.dataset_path}')
+        all_slides = list(path_base.iterdir())
+        
 
     # pos-i_pos-j -> x, y
     for idx, c_slide in enumerate(all_slides):
@@ -383,6 +347,6 @@ if __name__ == "__main__":
             args.workers,
             args.background_t,
         ).run()
-        nested_patches(c_slide, out_base, levels, ext=args.format)
+        nested_patches(str(c_slide.resolve()), out_base, levels, ext=args.format)
         shutil.rmtree("WSI_temp_files")
     print("Patch extraction done for {} slides.".format(len(all_slides)))

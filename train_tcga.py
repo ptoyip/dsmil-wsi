@@ -230,7 +230,7 @@ def main():
         help="Average the score of max-pooling and bag aggregating",
     )
     args = parser.parse_args()
-    gpu_ids = tuple(args.gpu_index)
+    gpu_ids = [0, 1, 2, 3, 4, 5, 6, 7]
     os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(str(x) for x in gpu_ids)
 
     if args.model == "dsmil":

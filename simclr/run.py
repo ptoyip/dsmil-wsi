@@ -18,9 +18,14 @@ def generate_csv(args):
         )
         patch_path = glob.glob(path_temp)  # /class_name/bag_name/*.jpeg
     if args.multiscale == 0:
-        path_temp = os.path.join(
-            "..", "WSI", args.dataset, "single", "*", "*", "*.jpeg"
-        )
+        if args.dataset_path != '':
+            path_temp = os.path.join(
+                args.dataset_path,'*/*/*.jpeg'
+            )
+        else:
+            path_temp = os.path.join(
+                "..", "WSI", args.dataset, "single", "*", "*", "*.jpeg"
+            )
         patch_path = glob.glob(path_temp)  # /class_name/bag_name/*.jpeg
     df = pd.DataFrame(patch_path)
     df.to_csv("all_patches.csv", index=False)
@@ -42,6 +47,9 @@ def main():
     )
     parser.add_argument(
         "--dataset", type=str, default="TCGA-lung", help="Dataset folder name"
+    )
+    parser.add_argument(
+        "--dataset_path", type=str, default = "", help="Dataset path name"
     )
     args = parser.parse_args()
     config = yaml.load(open("config.yaml", "r"), Loader=yaml.FullLoader)

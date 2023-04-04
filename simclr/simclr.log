@@ -1,0 +1,65 @@
+nohup: ignoring input
+(6,)
+Running on: cuda
+Feature extractor: resnet18
+Pre-trained weights not found. Training from scratch.
+Selected optimization level O2:  FP16 training with FP32 batchnorm and FP32 master weights.
+
+Defaults for this optimization level are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+Processing user overrides (additional kwargs that are not None)...
+After processing overrides, optimization options are:
+enabled                : True
+opt_level              : O2
+cast_model_type        : torch.float16
+patch_torch_functions  : False
+keep_batchnorm_fp32    : True
+master_weights         : True
+loss_scale             : dynamic
+Warning:  multi_tensor_applier fused unscale kernel is unavailable, possibly because apex was installed without --cuda_ext --cpp_ext. Using Python fallback.  Original ImportError was: ModuleNotFoundError("No module named 'amp_C'")
+start training
+epoch0
+/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/apex/__init__.py:68: DeprecatedFeatureWarning: apex.amp is deprecated and will be removed by the end of February 2023. Use [PyTorch AMP](https://pytorch.org/docs/stable/amp.html)
+  warnings.warn(msg, DeprecatedFeatureWarning)
+Traceback (most recent call last):
+  File "run.py", line 66, in <module>
+    main()
+  File "run.py", line 62, in main
+    simclr.train()
+  File "/home/yipkc/code/dsmil-wsi/simclr/simclr.py", line 107, in train
+    loss = self._step(model, xis, xjs, n_iter)
+  File "/home/yipkc/code/dsmil-wsi/simclr/simclr.py", line 56, in _step
+    rjs, zjs = model(xjs)  # [N,C]
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/apex/amp/_initialize.py", line 199, in new_fwd
+    **applier(kwargs, input_caster))
+  File "/home/yipkc/code/dsmil-wsi/simclr/models/resnet_simclr.py", line 34, in forward
+    h = self.features(x)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/container.py", line 204, in forward
+    input = module(input)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/container.py", line 204, in forward
+    input = module(input)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torchvision/models/resnet.py", line 93, in forward
+    out = self.bn1(out)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/instancenorm.py", line 74, in forward
+    return self._apply_instance_norm(input)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/modules/instancenorm.py", line 36, in _apply_instance_norm
+    self.training or not self.track_running_stats, self.momentum, self.eps)
+  File "/home/yipkc/anaconda3/envs/BCNB/lib/python3.7/site-packages/torch/nn/functional.py", line 2496, in instance_norm
+    input, weight, bias, running_mean, running_var, use_input_stats, momentum, eps, torch.backends.cudnn.enabled
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 64.00 MiB (GPU 0; 23.70 GiB total capacity; 15.19 GiB already allocated; 29.69 MiB free; 15.30 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
